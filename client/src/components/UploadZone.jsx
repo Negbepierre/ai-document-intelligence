@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const API_URL = 'http://127.0.0.1:5001'
+const API_URL = 'https://keating-ai-paralegal.onrender.com'
 
 function UploadZone({ onUploadSuccess, loading, setLoading, user }) {
   const [dragOver, setDragOver] = useState(false)
