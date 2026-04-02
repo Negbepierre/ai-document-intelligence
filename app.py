@@ -18,8 +18,6 @@ CORS(app, origins=[
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-document_store = {}
-
 AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
 KNOWLEDGE_BASE_ID = os.environ.get('KNOWLEDGE_BASE_ID')
 CLAUDE_MODEL = 'anthropic.claude-3-haiku-20240307-v1:0'
@@ -103,9 +101,7 @@ def generate_initial_review(document_text, filename):
     return call_claude(system_prompt, user_message)
 
 
-def answer_question(doc_id, question):
-    document = document_store[doc_id]
-
+def answer_question(question, document_text, filename):
     kb_context = query_knowledge_base(question)
 
     system_prompt = (
@@ -121,10 +117,10 @@ def answer_question(doc_id, question):
     )
 
     user_message = (
-        "Document: " + document['filename'] + "\n\n"
+        "Document: " + filename + "\n\n"
         "Question: " + question + "\n\n"
         "Document content:\n"
-        + document['text'][:8000]
+        + document_text[:8000]
     )
 
     return call_claude(system_prompt, user_message)
@@ -156,16 +152,11 @@ def upload_document():
         print(f'Generating review for {file.filename} using Bedrock Knowledge Base...')
         initial_review = generate_initial_review(text, file.filename)
 
-        document_store[doc_id] = {
-            'filename': file.filename,
-            'text': text,
-            'pages': len(PdfReader(filepath).pages)
-        }
-
         return jsonify({
             'doc_id': doc_id,
             'filename': file.filename,
             'pages': len(PdfReader(filepath).pages),
+            'document_text': text,
             'initial_review': initial_review,
             'message': 'Document uploaded and analysed successfully'
         })
@@ -179,20 +170,18 @@ def upload_document():
 def ask_question():
     data = request.get_json()
 
-    doc_id = data.get('doc_id')
     question = data.get('question')
+    document_text = data.get('document_text')
+    filename = data.get('filename')
 
-    if not doc_id or not question:
-        return jsonify({'error': 'doc_id and question are required'}), 400
-
-    if doc_id not in document_store:
-        return jsonify({'error': 'Document not found. Please upload again.'}), 404
+    if not question or not document_text or not filename:
+        return jsonify({'error': 'question, document_text and filename are required'}), 400
 
     try:
-        answer = answer_question(doc_id, question)
+        answer = answer_question(question, document_text, filename)
         return jsonify({
             'answer': answer,
-            'filename': document_store[doc_id]['filename']
+            'filename': filename
         })
 
     except Exception as e:

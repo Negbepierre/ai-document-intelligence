@@ -9,6 +9,7 @@ function App() {
   const [docId, setDocId] = useState(null)
   const [filename, setFilename] = useState('')
   const [initialReview, setInitialReview] = useState('')
+  const [documentText, setDocumentText] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -28,12 +29,14 @@ function App() {
     setDocId(null)
     setFilename('')
     setInitialReview('')
+    setDocumentText('')
   }
 
   const handleUploadSuccess = (data) => {
     setDocId(data.doc_id)
     setFilename(data.filename)
     setInitialReview(data.initial_review)
+    setDocumentText(data.document_text)
     setLoading(false)
   }
 
@@ -41,6 +44,7 @@ function App() {
     setDocId(null)
     setFilename('')
     setInitialReview('')
+    setDocumentText('')
   }
 
   if (!user) {
@@ -136,6 +140,7 @@ function App() {
             <ChatPanel
               docId={docId}
               filename={filename}
+              documentText={documentText}
               user={user}
             />
           </div>

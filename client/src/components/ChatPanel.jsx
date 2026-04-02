@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 
-const API_URL = 'http://127.0.0.1:5001'
+const API_URL = 'https://keating-ai-paralegal.onrender.com'
 
-function ChatPanel({ docId, filename, user }) {
+function ChatPanel({ docId, filename, documentText, user }) {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -28,6 +28,7 @@ function ChatPanel({ docId, filename, user }) {
     }
 
     setMessages(prev => [...prev, userMessage])
+    const currentInput = input
     setInput('')
     setLoading(true)
 
@@ -36,8 +37,9 @@ function ChatPanel({ docId, filename, user }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          doc_id: docId,
-          question: input
+          question: currentInput,
+          document_text: documentText,
+          filename: filename
         })
       })
 
@@ -48,16 +50,16 @@ function ChatPanel({ docId, filename, user }) {
       }
 
       setMessages(prev => [...prev, {
-        id: messages.length + 2,
+        id: prev.length + 2,
         role: 'assistant',
         content: data.answer
       }])
 
     } catch (error) {
       setMessages(prev => [...prev, {
-        id: messages.length + 2,
+        id: prev.length + 2,
         role: 'assistant',
-        content: 'I encountered an error processing your question. Please try again or contact the system administrator.'
+        content: 'Something went wrong. Please try your question again.'
       }])
     } finally {
       setLoading(false)
@@ -116,7 +118,6 @@ function ChatPanel({ docId, filename, user }) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
 
-        {/* Suggestions — show only at start */}
         {messages.length === 1 && (
           <div className="mb-4">
             <p className="text-xs uppercase tracking-widest mb-3"
@@ -147,7 +148,6 @@ function ChatPanel({ docId, filename, user }) {
             key={message.id}
             className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
           >
-            {/* Avatar */}
             <div className="w-7 h-7 rounded-full flex items-center justify-center
               flex-shrink-0 text-xs font-medium"
               style={{
@@ -160,7 +160,6 @@ function ChatPanel({ docId, filename, user }) {
               {message.role === 'assistant' ? 'AI' : user.name.charAt(0)}
             </div>
 
-            {/* Bubble */}
             <div
               className="max-w-xs lg:max-w-sm rounded-2xl px-4 py-3"
               style={{
