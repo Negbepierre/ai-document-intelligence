@@ -10,7 +10,10 @@ from PyPDF2 import PdfReader
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=[
+    'http://localhost:5173',
+    'https://ai-document-intelligence.netlify.app'
+])
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
